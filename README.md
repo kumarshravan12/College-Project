@@ -61,31 +61,7 @@ Android: Android Studio with API level 21+
 VS Code or Android Studio IDE
 
 
- Installation..
- 1. Clone the repository
-  git clone https://github.com/yourusername/healthmate_ai.git
-  cd healthmate_ai
 
- 2. Install dependencies
-   flutter pub get
-  
-
- 3. Configure environment variables
-    cp .env.example .env
-   # Edit .env with your API keys and configurations
-   
- 4. Generate code for build runners (if using code generation)
-      flutter pub run build_runner build
-    
- 5. Run the app
-  # Run on connected device/emulator
-   flutter run
-   
-   # Run in release mode
-   flutter run --release
-   
-   # Run on specific device
-   flutter run -d "device_id"
 
 
 Dependencies....
