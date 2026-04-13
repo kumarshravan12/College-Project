@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:healthmate_ai/services/auth_service.dart';
+import 'package:healthmate_ai/features/home/screens/home_screen.dart';
+import 'package:healthmate_ai/widgets/custom_message_dialog.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,6 +15,48 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+  final AuthService _authService = AuthService();
+
+  void _handleSignIn() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    
+    if (email.isEmpty || password.isEmpty) return;
+    
+    setState(() => _isLoading = true);
+    
+    try {
+      final user = await _authService.signIn(email, password);
+      if (user != null && mounted) {
+        Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const HomeScreen()), (route) => false);
+      }
+    } catch (e) {
+      if (mounted) CustomMessageDialog.show(context, e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _forgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      CustomMessageDialog.show(context, 'Please enter your email address first');
+      return;
+    }
+    
+    setState(() => _isLoading = true);
+    try {
+      await _authService.sendPasswordResetEmail(email);
+      if (mounted) {
+        CustomMessageDialog.show(context, 'Password reset link sent to your email', isError: false);
+      }
+    } catch (e) {
+      if (mounted) CustomMessageDialog.show(context, e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -140,9 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      // Handle forgot password
-                    },
+                    onTap: _isLoading ? null : _forgotPassword,
                     child: const Text(
                       'Forgot Password?',
                       style: TextStyle(
@@ -204,11 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 60,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Handle sign in
-
-
-                  },
+                  onPressed: _isLoading ? null : _handleSignIn,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF264C2E), // Dark green
                     foregroundColor: Colors.white,
@@ -218,13 +257,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     elevation: 5,
                     shadowColor: const Color(0xFF264C2E).withOpacity(0.5),
                   ),
-                  child: const Text(
-                    'Sign In',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text(
+                          'Sign In',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 40),
