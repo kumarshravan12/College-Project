@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-
+import 'package:healthmate_ai/services/auth_service.dart';
+import 'package:healthmate_ai/features/home/screens/home_screen.dart';
+import 'package:healthmate_ai/widgets/custom_message_dialog.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -15,6 +17,45 @@ class _SignupScreenState extends State<SignupScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _agreedToTerms = false;
+  bool _isLoading = false;
+  final AuthService _authService = AuthService();
+
+  void _handleSignup() async {
+    if (!_agreedToTerms) {
+      CustomMessageDialog.show(context, 'Please agree to the Terms & Conditions');
+      return;
+    }
+    
+    final name = _nameController.text.trim();
+    final dob = _dobController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    
+    if (name.isEmpty || dob.isEmpty || email.isEmpty || password.isEmpty) {
+      CustomMessageDialog.show(context, 'Please fill all fields');
+      return;
+    }
+    
+    setState(() => _isLoading = true);
+    
+    try {
+      await _authService.signUp(email, password, name, dob);
+      if (mounted) {
+        CustomMessageDialog.show(
+          context,
+          'Account created successfully! Please login.',
+          isError: false,
+          onClose: () {
+            if (mounted) Navigator.pop(context); // Go back to login screen
+          },
+        );
+      }
+    } catch (e) {
+      if (mounted) CustomMessageDialog.show(context, e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -238,9 +279,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Handle create account
-                  },
+                  onPressed: _isLoading ? null : _handleSignup,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2E5336), // Dark green
                     foregroundColor: Colors.white,
@@ -249,13 +288,15 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'Create Account',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text(
+                          'Create Account',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 32),

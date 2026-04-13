@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:healthmate_ai/services/auth_service.dart';
+import 'package:healthmate_ai/features/home/screens/home_screen.dart';
 import 'login_screen.dart';
 
 
@@ -33,10 +35,22 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.5, curve: Curves.easeIn)),
     );
 
-    _controller.forward().then((_) {
+    _controller.forward().then((_) async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('has_seen_splash', true);
+
+      Widget nextScreen;
+      try {
+        final user = AuthService().getCurrentUser();
+        nextScreen = user != null ? const HomeScreen() : const LoginScreen();
+      } catch (e) {
+        debugPrint('Auth initialization error: $e');
+        nextScreen = const LoginScreen(); // Fallback to login rather than freezing
+      }
+
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => LoginScreen(),
+          builder: (context) => nextScreen,
         ),
       );
     });

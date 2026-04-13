@@ -43,6 +43,21 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
+	<!-- App Permissions Descriptions -->
+	<key>NSCameraUsageDescription</key>
+	<string>HealthMate AI needs access to your camera to scan medicine, food, or analyze health attributes.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>HealthMate AI needs access to your microphone for voice-enabled health assistance.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>HealthMate AI needs access to your photos to let you upload medical records or imagery.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>HealthMate AI needs your location to find nearby hospitals, clinics, and doctors.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>HealthMate AI needs your location to find nearby hospitals, clinics, and doctors.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>HealthMate AI needs to recognize your physical activity to track your fitness and steps.</string>
+
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 </dict>
