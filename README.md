@@ -13,6 +13,9 @@ Data Security - HIPAA-compliant infrastructure with enterprise-grade encryption
 Vision
 To democratize healthcare by providing every individual with a trusted, AI-powered personal health companion that enhances wellness, simplifies health management, and bridges the gap between patients and healthcare professionals.
 
+
+
+
 Key Features:-
 
 1. Symptom Analysis & Triage
@@ -24,6 +27,10 @@ Key Features:-
 7. Analytics & Insights
 8. Health Records Management
 
+
+
+
+
 Technology Stack:-
    Frontend (Flutter):-
    Mobile: Flutter 3.x (iOS & Android)
@@ -32,12 +39,17 @@ Technology Stack:-
 - GetIt for dependency injection
 - Firebase for real-time features
 
+
+
    Backend:-
   API: Node.js/Express or Python/FastAPI
 Database: PostgreSQL (primary) + MongoDB (flexible data)
 Caching: Redis
 Message Queue: RabbitMQ/Apache Kafka
 Storage: AWS S3 / Google Cloud Storage
+
+
+
 
   AI/ML:-
   LLM: OpenAI API / Claude API / Anthropic
@@ -51,7 +63,11 @@ CI/CD: GitHub Actions / GitLab CI
 Monitoring: Datadog / New Relic
 Security: HashiCorp Vault for secrets management
 
-Getting Started:-
+
+
+
+
+
 
 Prerequisites:
 Flutter SDK 3.0 or higher
