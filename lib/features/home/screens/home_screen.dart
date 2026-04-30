@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:healthmate_ai/services/auth_service.dart';
 import 'package:healthmate_ai/features/auth/screens/login_screen.dart';
+import 'package:healthmate_ai/features/chat/screens/chat_screen.dart';
+import 'package:healthmate_ai/features/symptoms/screens/symptoms_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool _dailyExerciseReminder = false;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  final PageController _pageController = PageController();
 
   @override
   void initState() {
@@ -32,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void dispose() {
     _pulseController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -57,51 +61,92 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB), // Very light modern background
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      body: IndexedStack(
+        index: _currentIndex <= 1 ? 0 : (_currentIndex == 2 ? 1 : 2),
+        children: [
+          PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
             children: [
-              _buildHeader(context, user),
+              SafeArea(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(context, user),
 
-              const SizedBox(height: 20),
-              _buildGreeting(),
+                      const SizedBox(height: 20),
+                      _buildGreeting(),
 
+                      const SizedBox(height: 32),
+                      _buildCenterOrb(),
+                      const SizedBox(height: 32),
+                      _buildSearchBar(),
 
-              const SizedBox(height: 32),
+                      const SizedBox(height: 32),
+                      _buildSectionTitle('Quick Actions'),
+                      const SizedBox(height: 16),
+                      _buildQuickActionsGrid(),
+                      const SizedBox(height: 32),
 
-              _buildCenterOrb(),
-              const SizedBox(height: 32),
-              _buildSearchBar(),
+                      _buildSectionTitle('Trending Features'),
+                      const SizedBox(height: 16),
+                      _buildTrendingFeatures(),
+                      const SizedBox(height: 32),
 
-              const SizedBox(height: 32),
-              _buildSectionTitle('Quick Actions'),
-              const SizedBox(height: 16),
-              _buildQuickActionsGrid(),
-              const SizedBox(height: 32),
+                      _buildSectionTitle('Smart Reminders'),
+                      const SizedBox(height: 16),
 
-              _buildSectionTitle('Trending Features'),
-              const SizedBox(height: 16),
-              _buildTrendingFeatures(),
-              const SizedBox(height: 32),
-
-              _buildSectionTitle('Smart Reminders'),
-              const SizedBox(height: 16),
-
-
-
-              _buildSmartReminders(),
-              const SizedBox(height: 48), // Padding for Bottom Nav Bar
+                      _buildSmartReminders(),
+                      const SizedBox(height: 48), // Padding for Bottom Nav Bar
+                    ],
+                  ),
+                ),
+              ),
+              ChatScreen(
+                onBackPressed: () {
+                  if (_pageController.hasClients) {
+                    _pageController.animateToPage(
+                      0,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                  setState(() {
+                    _currentIndex = 0;
+                  });
+                },
+              ),
             ],
           ),
-        ),
+          const Scaffold(body: Center(child: Text("Plans coming soon..."))),
+          const Scaffold(body: Center(child: Text("Profile coming soon..."))),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: const Color(0xFF264C2E), // Dark Green
-        elevation: 4,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF264C2E).withOpacity(0.4),
+              blurRadius: 16,
+              spreadRadius: 2,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () {},
+          backgroundColor: const Color(0xFF264C2E), // Dark Green
+          elevation: 0,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: _buildBottomNavigationBar(),
@@ -254,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         color: const Color(0xFFD1EADC),
                         border: Border.all(
                           color: Colors.green.withOpacity(0.2), 
-                          width: 1.5,
+                            width: 1.5,
                         ),
                       ),
                     ),
@@ -277,7 +322,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           color: Colors.white,
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
-            BoxShadow(
+                  BoxShadow(
               color: Colors.black.withOpacity(0.03),
               blurRadius: 15,
               offset: const Offset(0, 5),
@@ -286,24 +331,48 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
         child: Row(
           children: [
-            const Padding(
-              padding: EdgeInsets.only(left: 24.0, right: 12.0),
-              child: Text(
-                'Ask HealthMate anything...',
-                style: TextStyle(color: Colors.black38, fontSize: 16),
+            const Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(left: 24.0, right: 12.0),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Ask HealthMate anything...',
+                    hintStyle: TextStyle(color: Colors.black38, fontSize: 16),
+                    border: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                    filled: false,
+                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.black87),
+                ),
               ),
             ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF2E5336), // Dark green
-                  shape: BoxShape.circle,
+            GestureDetector(
+                             onTap: () {
+                // Navigate to Chat Screen
+                FocusScope.of(context).unfocus(); // Dismiss keyboard if open
+                if (_currentIndex != 1) {
+                  setState(() {
+                    _currentIndex = 1;
+                  });
+                  _pageController.animateToPage(
+                    1,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                             decoration: const BoxDecoration(
+                    color: Color(0xFF2E5336), // Dark green
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.mic_none_rounded, color: Colors.white, size: 24),
                 ),
-                child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
               ),
             ),
           ],
@@ -331,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       {'title': 'AI Chat', 'icon': Icons.auto_awesome_rounded, 'color': const Color(0xFF4DB065), 'bgColor': const Color(0xFFE8F5E9)},
       {'title': 'Symptom\nChecker', 'icon': Icons.monitor_heart_rounded, 'color': const Color(0xFFAB47BC), 'bgColor': const Color(0xFFF3E5F5)},
       {'title': 'Diet Plan', 'icon': Icons.set_meal_rounded, 'color': const Color(0xFFFF9800), 'bgColor': const Color(0xFFFFF3E0)},
-      {'title': 'Workout Plan', 'icon': Icons.directions_run_rounded, 'color': const Color(0xFF29B6F6), 'bgColor': const Color(0xFFE1F5FE)},
+      {'title': 'Coming Soon', 'icon': Icons.hourglass_empty_rounded, 'color': const Color(0xFF9E9E9E), 'bgColor': const Color(0xFFF5F5F5)},
     ];
 
     return Padding(
@@ -342,15 +411,32 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
+                mainAxisSpacing: 16,
           childAspectRatio: 1.15,
         ),
         itemCount: actions.length,
         itemBuilder: (context, index) {
           final action = actions[index];
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.7), // Transparent glass box
+          return GestureDetector(
+            onTap: () {
+              if (action['title'] == 'AI Chat') {
+                setState(() {
+                  _currentIndex = 1;
+                });
+                _pageController.animateToPage(
+                         1,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
+              } else if (action['title'] == 'Symptom\nChecker') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SymptomsScreen()),
+                );
+              }
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                     color: Colors.white.withOpacity(0.7), // Transparent glass box
               borderRadius: BorderRadius.circular(28),
               border: Border.all(color: Colors.white, width: 2), // Frosted white edge
               boxShadow: [
@@ -370,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                          color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
@@ -393,13 +479,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     style: const TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 15,
-                      color: Color(0xFF2C2C2C),
+                             color: Color(0xFF2C2C2C),
                       letterSpacing: 0.2, // Premium tighter kerning 
                       height: 1.2,
                     ),
                   ),
                 ],
               ),
+            ),
             ),
           );
         },
@@ -410,19 +497,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget _buildTrendingFeatures() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Row(
         children: [
           // Card 1
           Container(
-            width: 300,
+                   width: 300,
             height: 160,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(32),
               border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
               gradient: LinearGradient(
-                colors: [
+                     colors: [
                   const Color(0xFF193B1F).withOpacity(0.85),
                   const Color(0xFF2E5336).withOpacity(0.8)
                 ],
@@ -432,7 +520,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF2E5336).withOpacity(0.2),
-                  blurRadius: 16,
+                          blurRadius: 16,
                   offset: const Offset(0, 8),
                 ),
               ],
@@ -442,7 +530,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 const Icon(Icons.bar_chart_rounded, color: Colors.white70, size: 28),
-                const SizedBox(height: 16),
+                      const SizedBox(height: 16),
                 const Text(
                   'AI Health Report',
                   style: TextStyle(
@@ -457,7 +545,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.8),
                     fontSize: 13,
-                  ),
+                        ),
                 ),
               ],
             ),
@@ -471,7 +559,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(32),
               border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
-              gradient: LinearGradient(
+                   gradient: LinearGradient(
                 colors: [
                   const Color(0xFF1E3C72).withOpacity(0.85),
                   const Color(0xFF2A5298).withOpacity(0.8)
@@ -525,19 +613,57 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           _buildReminderItem(
             title: 'Drink Water',
             subtitle: 'Scheduled at 2:00 PM',
-            icon: Icons.water_drop_outlined,
-            iconColor: Colors.blueAccent,
-            iconBg: Colors.blue.withOpacity(0.1),
+            customIcon: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF81D4FA), Color(0xFF0288D1)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0288D1).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text('💧', style: TextStyle(fontSize: 24)),
+              ),
+            ),
             value: _drinkWaterReminder,
             onChanged: (val) => setState(() => _drinkWaterReminder = val),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           _buildReminderItem(
             title: 'Daily Exercise',
             subtitle: 'Scheduled at 5:30 PM',
-            icon: Icons.fitness_center_rounded,
-            iconColor: Colors.green,
-            iconBg: Colors.green.withOpacity(0.1),
+            customIcon: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFA5D6A7), Color(0xFF2E7D32)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2E7D32).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text('🏃‍♂️', style: TextStyle(fontSize: 24)),
+              ),
+            ),
             value: _dailyExerciseReminder,
             onChanged: (val) => setState(() => _dailyExerciseReminder = val),
           ),
@@ -549,35 +675,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget _buildReminderItem({
     required String title,
     required String subtitle,
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
+    required Widget customIcon,
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: iconBg,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
+          customIcon,
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -624,7 +741,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             _buildNavItem(0, Icons.home_rounded, 'HOME'),
             _buildNavItem(1, Icons.chat_bubble_outline_rounded, 'CHAT'),
             const SizedBox(width: 48), // Space for FAB
-            _buildNavItem(2, Icons.description_outlined, 'PLANS'),
+            _buildNavItem(2, Icons.description_outlined, 'REPORT'),
             _buildNavItem(3, Icons.person_outline_rounded, 'PROFILE'),
           ],
         ),
@@ -636,65 +753,78 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     bool isSelected = _currentIndex == index;
     return GestureDetector(
       onTap: () {
+        if (index <= 1) {
+          if (_currentIndex <= 1) {
+            _pageController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          } else {
+            // Instantly sync the PageView before we reveal it
+            _pageController.jumpToPage(index);
+          }
+        }
         setState(() {
           _currentIndex = index;
         });
       },
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 60,
+        width: 64, // Wider to comfortably fit the pill
         height: 65,
         child: Stack(
-          clipBehavior: Clip.none,
           alignment: Alignment.center,
+          clipBehavior: Clip.none,
           children: [
             // Liquid active pill background
             AnimatedContainer(
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeOutBack, // Apple-style spring
-              width: isSelected ? 80 : 45,
-              height: isSelected ? 70 : 45, // Springs to full pill size
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              width: isSelected ? 58 : 40,
+              height: isSelected ? 58 : 40,
               decoration: BoxDecoration(
                 color: isSelected 
-                    ? const Color(0xFF193B1F).withOpacity(0.12) 
+                    ? const Color(0xFF193B1F).withOpacity(0.13)
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(40),
               ),
             ),
-            // The Jumping Icon
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeOutBack,
-              top: isSelected ? 5 : 20, // Icon jumps up beautifully
-              left: 0,
-              right: 0,
-              child: Icon(
-                icon, 
-                color: isSelected ? const Color(0xFF193B1F) : Colors.black45, 
-                size: isSelected ? 35 : 40, // Increased size for better visibility
-              ),
-            ),
-            // The Text swooping in from below
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeOutBack,
-              bottom: isSelected ? 4 : -20, // Text slides up like liquid
-              left: 0,
-              right: 0,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 400),
-                opacity: isSelected ? 1.0 : 0.0,
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 10, 
-                    fontWeight: FontWeight.w900, 
-                    color: Color(0xFF193B1F),
-                    letterSpacing: 0.5,
+            // Centered Content
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutCubic,
+                  margin: EdgeInsets.only(bottom: isSelected ? 2 : 0),
+                  child: Icon(
+                    icon, 
+                    color: isSelected ? const Color(0xFF193B1F) : Colors.black45, 
+                    size: 26, // Perfect balance for icons
                   ),
                 ),
-              ),
+                // Text expands beautifully below
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutCubic,
+                  height: isSelected ? 14 : 0,
+                  alignment: Alignment.topCenter,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 250),
+                    opacity: isSelected ? 1.0 : 0.0,
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 10, 
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF193B1F),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'Colors.dart';
 
 class AppTheme {
@@ -101,6 +102,7 @@ class AppTheme {
       elevation: 8,
     ),
     useMaterial3: true,
+    fontFamily: GoogleFonts.inter().fontFamily,
   );
 
   // Dark Theme
@@ -202,5 +204,6 @@ class AppTheme {
       elevation: 8,
     ),
     useMaterial3: true,
+    fontFamily: GoogleFonts.inter().fontFamily,
   );
 }
