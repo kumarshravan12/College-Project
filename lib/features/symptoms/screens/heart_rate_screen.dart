@@ -590,7 +590,7 @@ class _HeartRateScreenState extends State<HeartRateScreen> with TickerProviderSt
 
         // Full-width ECG Waveform
         Positioned(
-          top: MediaQuery.of(context).size.height * 0.42,
+          top: MediaQuery.of(context).size.height * 0.32,
           left: 0, right: 0,
           child: AnimatedBuilder(
             animation: _ecgController,
@@ -647,8 +647,20 @@ class _HeartRateScreenState extends State<HeartRateScreen> with TickerProviderSt
         child: GestureDetector(
           onTap: () {
             _stateTimer?.cancel();
-            _cameraController?.setFlashMode(FlashMode.off);
-            setState(() => _currentState = HeartRateState.countdown);
+            try {
+              _cameraController?.setFlashMode(FlashMode.torch);
+            } catch (e) {
+              debugPrint("Flash unsupported: $e");
+            }
+            setState(() {
+              _currentState = HeartRateState.countdown;
+              _progress = 0;
+              _counter = 4;
+              _countdownMilliseconds = 4000;
+              _liveBpm = 0;
+              _sensorData.clear();
+            });
+            _startCountdown();
           },
           child: Container(
             width: 240,

@@ -3,6 +3,7 @@ import 'package:healthmate_ai/services/auth_service.dart';
 import 'package:healthmate_ai/features/auth/screens/login_screen.dart';
 import 'package:healthmate_ai/features/chat/screens/chat_screen.dart';
 import 'package:healthmate_ai/features/symptoms/screens/symptoms_screen.dart';
+import 'package:healthmate_ai/features/home/screens/assistant_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -37,6 +38,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _pulseController.dispose();
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _navigateToAssistant() async {
+    final result = await Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const AssistantScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeOutCubic;
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(position: animation.drive(tween), child: child);
+        },
+      ),
+    );
+
+    if (result == 'chat' && mounted) {
+      setState(() => _currentIndex = 1);
+      _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    }
   }
 
   void _logout(BuildContext context) async {
@@ -269,46 +290,49 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _buildCenterOrb() {
     return Center(
-      child: AnimatedBuilder(
-        animation: _pulseAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _pulseAnimation.value,
-            child: Container(
-              width: 170, // Outermost third circle
-              height: 170,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFE4F3EA).withOpacity(0.4), 
-              ),
-              child: Center(
-                child: Container(
-                  width: 135, // Middle circle
-                  height: 135,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFFE4F3EA), 
-                    border: Border.all(color: Colors.green.withOpacity(0.1), width: 2),
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: 105, // Innermost circle
-                      height: 105,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFFD1EADC),
-                        border: Border.all(
-                          color: Colors.green.withOpacity(0.2), 
-                            width: 1.5,
+      child: GestureDetector(
+        onTap: _navigateToAssistant,
+        child: AnimatedBuilder(
+          animation: _pulseAnimation,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: _pulseAnimation.value,
+              child: Container(
+                width: 170, // Outermost third circle
+                height: 170,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFE4F3EA).withOpacity(0.4), 
+                ),
+                child: Center(
+                  child: Container(
+                    width: 135, // Middle circle
+                    height: 135,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFFE4F3EA), 
+                      border: Border.all(color: Colors.green.withOpacity(0.1), width: 2),
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 105, // Innermost circle
+                        height: 105,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFFD1EADC),
+                          border: Border.all(
+                            color: Colors.green.withOpacity(0.2), 
+                              width: 1.5,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -316,53 +340,44 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Container(
-        height: 60,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-                  BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            const Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(left: 24.0, right: 12.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Ask HealthMate anything...',
-                    hintStyle: TextStyle(color: Colors.black38, fontSize: 16),
-                    border: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                    filled: false,
+      child: GestureDetector(
+        onTap: _navigateToAssistant,
+        child: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+                    BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 24.0, right: 12.0),
+                  child: TextField(
+                    readOnly: true,
+                    onTap: _navigateToAssistant,
+                    decoration: const InputDecoration(
+                      hintText: 'Ask HealthMate anything...',
+                      hintStyle: TextStyle(color: Colors.black38, fontSize: 16),
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                      filled: false,
+                    ),
+                    style: const TextStyle(fontSize: 16, color: Colors.black87),
                   ),
-                  style: TextStyle(fontSize: 16, color: Colors.black87),
                 ),
               ),
-            ),
-            GestureDetector(
-                             onTap: () {
-                // Navigate to Chat Screen
-                FocusScope.of(context).unfocus(); // Dismiss keyboard if open
-                if (_currentIndex != 1) {
-                  setState(() {
-                    _currentIndex = 1;
-                  });
-                  _pageController.animateToPage(
-                    1,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                }
-              },
-              child: Padding(
+              GestureDetector(
+                onTap: _navigateToAssistant,
+                child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Container(
                   width: 44,
@@ -377,6 +392,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ],
         ),
+      ),
       ),
     );
   }

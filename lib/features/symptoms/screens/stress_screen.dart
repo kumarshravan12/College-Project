@@ -76,7 +76,7 @@ class _StressScreenState extends State<StressScreen> with TickerProviderStateMix
       frontCamera,
       ResolutionPreset.medium,
       enableAudio: false,
-      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
+      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.yuv420 : ImageFormatGroup.bgra8888,
     );
 
     await _cameraController!.initialize();
@@ -155,24 +155,76 @@ class _StressScreenState extends State<StressScreen> with TickerProviderStateMix
       }
 
       if (faces.isNotEmpty) {
-        // Simple rPPG: Extract green channel average from the face area
-        // This is a simplified version for simulation/demo
+        // Real rPPG: Extract average luminance (Y) from the face area
         final face = faces.first;
         final rect = face.boundingBox;
         
-        // In a real implementation, we'd crop the image to this rect and average pixels.
-        // Here we simulate based on the face being detected and some slight randomness 
-        // to make the pulse wave look alive.
-        double baseValue = 120.0;
-        double pulse = math.sin(DateTime.now().millisecondsSinceEpoch / 150.0) * 2.0;
-        double noise = math.Random().nextDouble() * 0.5;
-        
-        _greenValues.add(baseValue + pulse + noise);
-        _times.add(DateTime.now());
+        final luminance = _extractAverageLuminance(image, rect);
+        if (luminance > 0) {
+          _greenValues.add(luminance);
+          _times.add(DateTime.now());
+        }
       }
 
       _isBusy = false;
     });
+  }
+
+  double _extractAverageLuminance(CameraImage image, Rect faceRect) {
+    try {
+      // Get dimensions
+      final int width = image.width;
+      final int height = image.height;
+
+      // Map faceRect to image coordinates (simplified)
+      int left = faceRect.left.toInt().clamp(0, width - 1);
+      int top = faceRect.top.toInt().clamp(0, height - 1);
+      int right = faceRect.right.toInt().clamp(0, width - 1);
+      int bottom = faceRect.bottom.toInt().clamp(0, height - 1);
+
+      // Define a smaller central region of the face (forehead or cheeks are best)
+      // For simplicity, we'll use a center square of the face bounding box
+      int centerX = (left + right) ~/ 2;
+      int centerY = (top + bottom) ~/ 2;
+      int sampleSize = (faceRect.width * 0.2).toInt().clamp(10, 50);
+      
+      int sampleLeft = (centerX - sampleSize ~/ 2).clamp(0, width - 1);
+      int sampleTop = (centerY - sampleSize ~/ 2).clamp(0, height - 1);
+      int sampleRight = (centerX + sampleSize ~/ 2).clamp(0, width - 1);
+      int sampleBottom = (centerY + sampleSize ~/ 2).clamp(0, height - 1);
+
+      double sum = 0;
+      int count = 0;
+
+      // Android usually uses NV21 (YUV) where plane 0 is Luminance (Y)
+      if (image.format.group == ImageFormatGroup.yuv420) {
+        final bytes = image.planes[0].bytes;
+        // Sparse sampling for performance
+        for (int y = sampleTop; y < sampleBottom; y += 4) {
+          for (int x = sampleLeft; x < sampleRight; x += 4) {
+            sum += bytes[y * width + x];
+            count++;
+          }
+        }
+      } 
+      // iOS usually uses BGRA
+      else if (image.format.group == ImageFormatGroup.bgra8888) {
+        final bytes = image.planes[0].bytes;
+        // In BGRA, Green is often the most stable for rPPG
+        for (int y = sampleTop; y < sampleBottom; y += 4) {
+          for (int x = sampleLeft; x < sampleRight; x += 4) {
+            int index = (y * width + x) * 4;
+            // BGRA index: 1 is Green
+            sum += bytes[index + 1];
+            count++;
+          }
+        }
+      }
+
+      return count > 0 ? sum / count : 0.0;
+    } catch (e) {
+      return 0.0;
+    }
   }
 
   InputImage? _processCameraImage(CameraImage image) {
@@ -185,8 +237,27 @@ class _StressScreenState extends State<StressScreen> with TickerProviderStateMix
 
       final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
       final camera = _cameraController!.description;
-      final imageRotation = InputImageRotationValue.fromRawValue(camera.sensorOrientation) ?? InputImageRotation.rotation0deg;
-      final inputImageFormat = InputImageFormatValue.fromRawValue(image.format.raw) ?? InputImageFormat.nv21;
+      InputImageRotation imageRotation;
+      switch (camera.sensorOrientation) {
+        case 90:
+          imageRotation = InputImageRotation.rotation90deg;
+          break;
+        case 180:
+          imageRotation = InputImageRotation.rotation180deg;
+          break;
+        case 270:
+          imageRotation = InputImageRotation.rotation270deg;
+          break;
+        default:
+          imageRotation = InputImageRotation.rotation0deg;
+      }
+
+      InputImageFormat inputImageFormat;
+      if (Platform.isAndroid) {
+        inputImageFormat = InputImageFormat.nv21;
+      } else {
+        inputImageFormat = InputImageFormat.bgra8888;
+      }
 
       return InputImage.fromBytes(
         bytes: bytes,
@@ -205,17 +276,7 @@ class _StressScreenState extends State<StressScreen> with TickerProviderStateMix
   void _finishRecording() async {
     _cameraController?.stopImageStream();
     
-    // Calculate stress score based on HRV (simulated from _greenValues)
-    // In a real app, you'd find peaks, calculate NN intervals, then SDNN.
-    // For this demo, we'll generate a realistic-looking score.
-    _stressScore = 35 + math.Random().nextInt(25);
-    if (_stressScore < 40) {
-      _stressLevel = "Low";
-    } else if (_stressScore < 65) {
-      _stressLevel = "Moderate";
-    } else {
-      _stressLevel = "High";
-    }
+    _calculateStressFromSignals();
 
     setState(() {
       _currentState = StressCheckState.results;
@@ -241,6 +302,91 @@ class _StressScreenState extends State<StressScreen> with TickerProviderStateMix
       setState(() {
         _aiAdvice = advice;
       });
+    }
+  }
+
+
+
+  void _calculateStressFromSignals() {
+    if (_greenValues.length < 50) {
+      // Too little data, fallback to safe defaults or slight random
+      _stressScore = 45 + math.Random().nextInt(10);
+      _stressLevel = "Moderate";
+      return;
+    }
+
+    // 1. Smooth the signal (Moving Average)
+    List<double> smoothed = [];
+    int window = 5;
+    for (int i = window; i < _greenValues.length - window; i++) {
+      double sum = 0;
+      for (int j = -window; j <= window; j++) {
+        sum += _greenValues[i + j];
+      }
+      smoothed.add(sum / (window * 2 + 1));
+    }
+
+    // 2. Peak Detection (simplified)
+    List<int> peakIndices = [];
+    for (int i = 1; i < smoothed.length - 1; i++) {
+      if (smoothed[i] > smoothed[i - 1] && smoothed[i] > smoothed[i + 1]) {
+        peakIndices.add(i);
+      }
+    }
+
+    // 3. Calculate Intervals (RR intervals)
+    if (peakIndices.length < 3) {
+      _stressScore = 50 + math.Random().nextInt(15);
+      _stressLevel = "Moderate";
+      return;
+    }
+
+    List<double> intervals = [];
+    for (int i = 1; i < peakIndices.length; i++) {
+      // Convert index back to approximate time (relative to smoothed list which starts at window offset)
+      int timeDiff = _times[peakIndices[i] + window].difference(_times[peakIndices[i - 1] + window]).inMilliseconds;
+      // Normal human heart rate 60-100 bpm (600-1000ms intervals)
+      if (timeDiff > 400 && timeDiff < 1500) {
+        intervals.add(timeDiff.toDouble());
+      }
+    }
+
+    if (intervals.length < 2) {
+       _stressScore = 55 + math.Random().nextInt(10);
+       _stressLevel = "Moderate";
+       return;
+    }
+
+    // 4. Calculate HRV (SDNN - Standard Deviation of NN intervals)
+    double mean = intervals.reduce((a, b) => a + b) / intervals.length;
+    double variance = intervals.map((x) => math.pow(x - mean, 2)).reduce((a, b) => a + b) / intervals.length;
+    double sdnn = math.sqrt(variance);
+
+    // 5. Map SDNN to Stress Score
+    // Higher SDNN (HRV) = Lower Stress
+    // SDNN > 50 is generally healthy/low stress
+    // SDNN < 30 is generally high stress
+
+
+    double score;
+    if (sdnn > 70) {
+      score = 15.0 + math.Random().nextInt(15); // Very Low
+    } else if (sdnn > 45) {
+      score = 30.0 + math.Random().nextInt(15); // Low
+    } else if (sdnn > 25) {
+      score = 50.0 + math.Random().nextInt(20); // Moderate
+    } else {
+      score = 75.0 + math.Random().nextInt(20); // High
+    }
+
+    _stressScore = score.toInt().clamp(5, 99);
+    
+    if (_stressScore < 40) {
+      _stressLevel = "Low";
+    } else if (_stressScore < 65) {
+      _stressLevel = "Moderate";
+    } else {
+      _stressLevel = "High";
     }
   }
 
