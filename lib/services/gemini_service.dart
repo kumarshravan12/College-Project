@@ -1,16 +1,15 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
-  // IMPORTANT: Replace with your real API key or use an environment variable
-  static const String _apiKey = 'YOUR_GEMINI_API_KEY';
-  
+  String get _apiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
   final GenerativeModel _model;
 
   GeminiService()
       : _model = GenerativeModel(
           model: 'gemini-1.5-flash',
-          apiKey: _apiKey,
+          apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
         );
 
   Future<String> getHealthAdvice({

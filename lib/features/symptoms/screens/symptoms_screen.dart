@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:healthmate_ai/services/auth_service.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:healthmate_ai/features/symptoms/screens/heart_rate_screen.dart';
 import 'package:healthmate_ai/features/symptoms/screens/stress_screen.dart';
 
@@ -16,8 +17,8 @@ class _SymptomsScreenState extends State<SymptomsScreen> {
   bool _isLoadingInsight = false;
   List<InlineSpan> _dynamicAiInsight = [];
 
-  // TODO: Add your Gemini API Key here so real AI insights work.
-  static const String _geminiApiKey = 'YOUR_GEMINI_API_KEY';
+  // Fetching Gemini API Key from .env
+  String get _geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 
   final List<List<InlineSpan>> _insights = [
     [
@@ -79,18 +80,21 @@ class _SymptomsScreenState extends State<SymptomsScreen> {
     ],
   ];
 
+  int _refreshCount = 0;
+
   Future<void> _fetchAiInsight() async {
     setState(() {
       _isLoadingInsight = true;
     });
 
     try {
-      if (_geminiApiKey == 'YOUR_GEMINI_API_KEY' || _geminiApiKey.isEmpty) {
+      if (_geminiApiKey.isEmpty || _geminiApiKey == 'YOUR_API_KEY') {
         // Fallback if the user hasn't put their API key in yet
         await Future.delayed(const Duration(milliseconds: 600));
         setState(() {
           _currentInsightIndex = (_currentInsightIndex + 1) % _insights.length;
           _dynamicAiInsight = []; // Clear AI insight to use hardcoded list
+          _refreshCount++;
           _isLoadingInsight = false;
         });
         return;
@@ -104,6 +108,7 @@ class _SymptomsScreenState extends State<SymptomsScreen> {
       if (response.text != null && response.text!.isNotEmpty) {
         setState(() {
           _dynamicAiInsight = _parseMarkdownToSpans(response.text!);
+          _refreshCount++;
           _isLoadingInsight = false;
         });
       } else {
@@ -115,6 +120,7 @@ class _SymptomsScreenState extends State<SymptomsScreen> {
        setState(() {
         _currentInsightIndex = (_currentInsightIndex + 1) % _insights.length;
         _dynamicAiInsight = [];
+        _refreshCount++;
         _isLoadingInsight = false;
       });
     }
@@ -647,7 +653,7 @@ class _SymptomsScreenState extends State<SymptomsScreen> {
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
                     child: Text.rich(
-                      key: ValueKey<int>(_currentInsightIndex + (_dynamicAiInsight.isEmpty ? 0 : 100)),
+                      key: ValueKey<int>(_refreshCount),
                       TextSpan(
                         style: const TextStyle(
                           fontSize: 18,
