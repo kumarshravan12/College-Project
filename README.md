@@ -1,174 +1,158 @@
-# 🩺 HealthMate AI
+<div align="center">
+
+## 🩺 HealthMate AI
+
+### AI Powered Personal Health Companion
 
 An intelligent AI-powered personal health companion designed to help users manage their health through personalized insights, symptom analysis, medication tracking, and preventive wellness guidance.
 
+</div>
+
 ---
 
-# 📖 Project Overview
+## 📖 Project Overview
 
 HealthMate AI is a modern mobile-first healthcare platform that combines artificial intelligence with health management tools to provide users with a smarter and more personalized healthcare experience.
 
-The platform includes:
+### Platform Includes
 
-- 🤖 Advanced AI Diagnostics
-- 🧠 Intelligent Health Chat Assistant
-- 💊 Medication & Health Management
-- 📊 Analytics and Wellness Insights
-- 🔗 Wearable and Healthcare Integration
-- 🔒 Enterprise Grade Security
+- 🤖 Advanced AI Diagnostics  
+- 🧠 Intelligent Health Chat Assistant  
+- 💊 Medication & Health Management  
+- 📊 Analytics and Wellness Insights  
+- 🔗 Wearable and Healthcare Integration  
+- 🔒 Enterprise Grade Security  
 
 ---
 
-# 🌍 Vision
+## 🌍 Vision
 
 To democratize healthcare by providing every individual with a trusted AI-powered health companion that enhances wellness, simplifies healthcare management, and bridges the gap between patients and healthcare professionals.
 
 ---
 
-# ✨ Key Features
+## ✨ Key Features
 
-## 1. 🩺 Symptom Analysis & Triage
+### 🩺 Symptom Analysis & Triage
 - AI-powered symptom checking
 - Smart health recommendations
 - Preliminary risk analysis
 
----
-
-## 2. 👤 Personal Health Profile
+### 👤 Personal Health Profile
 - Centralized health information
 - Medical history tracking
 - Lifestyle and wellness records
 
----
-
-## 3. 💊 Medication Management
+### 💊 Medication Management
 - Medicine reminders
 - Dosage tracking
 - Prescription management
 
----
-
-## 4. 📈 Health Metrics & Vitals
+### 📈 Health Metrics & Vitals
 - Sleep monitoring
 - Water intake tracking
-- Heart rate and BMI monitoring
-- Daily health score
+- Heart rate monitoring
+- BMI & daily health score
 
----
-
-## 5. 🤖 AI Health Chat Assistant
+### 🤖 AI Health Chat Assistant
 - 24/7 intelligent health support
 - Natural language conversations
 - Personalized wellness suggestions
 
----
-
-## 6. 🏥 Healthcare Provider Integration
+### 🏥 Healthcare Provider Integration
 - Doctor communication support
 - Appointment management
 - Future telemedicine integration
 
----
-
-## 7. 📊 Analytics & Insights
+### 📊 Analytics & Insights
 - Weekly health reports
 - AI-generated recommendations
 - Wellness trend analysis
 
----
-
-## 8. 📂 Health Records Management
+### 📂 Health Records Management
 - Secure document storage
 - Lab reports and prescriptions
 - Medical data organization
 
 ---
 
-# 🛠️ Technology Stack
+## 🛠️ Technology Stack
 
-## 📱 Frontend (Flutter)
-
-- Flutter 3.x (Android & iOS)
+### 📱 Frontend
+- Flutter 3.x
 - Dart Programming Language
-- Riverpod / Provider (State Management)
-- GetIt (Dependency Injection)
+- Riverpod / Provider
+- GetIt
 - Firebase Services
 
----
-
-## ⚙️ Backend
-
-### API Layer
+### ⚙️ Backend
 - Node.js + Express  
-or
 - Python + FastAPI
 
-### Database
-- PostgreSQL (Primary Database)
-- MongoDB (Flexible Data Storage)
+### 🗄️ Database
+- PostgreSQL
+- MongoDB
 
-### Caching & Messaging
+### ⚡ Caching & Messaging
 - Redis
 - RabbitMQ / Apache Kafka
 
-### Cloud Storage
+### ☁️ Cloud Storage
 - AWS S3
 - Google Cloud Storage
 
 ---
 
-# 🤖 AI & Machine Learning
+## 🤖 AI & Machine Learning
 
-## AI Models & APIs
+### AI APIs
 - OpenAI API
 - Claude API
 - Anthropic API
 
-## Medical Knowledge Systems
+### Medical Systems
 - ICD-10
 - SNOMED CT
 - RxNorm
 
-## AI Frameworks
+### AI Frameworks
 - LangChain
 - LlamaIndex
 
-## ML Features
-- Symptom analysis models
+### ML Features
+- Symptom analysis
 - Predictive health insights
 - Personalized recommendations
 
 ---
 
-# ☁️ Infrastructure & DevOps
+## ☁️ Infrastructure & DevOps
 
-## Cloud Platforms
+### Cloud Platforms
 - AWS
 - Google Cloud Platform
 - Microsoft Azure
 
-## Deployment & Scaling
+### Deployment
 - Docker
 - Kubernetes
 
-## CI/CD
+### CI/CD
 - GitHub Actions
 - GitLab CI
 
-## Monitoring
+### Monitoring
 - Datadog
 - New Relic
 
-## Security
+### Security
 - HIPAA-compliant architecture
 - End-to-end encryption
-- HashiCorp Vault for secrets management
+- HashiCorp Vault
 
 ---
 
-# 🔐 Security & Compliance
-
-HealthMate AI follows modern healthcare security standards:
+## 🔐 Security & Compliance
 
 - HIPAA-compliant infrastructure
 - Secure authentication
@@ -178,58 +162,125 @@ HealthMate AI follows modern healthcare security standards:
 
 ---
 
-# 📦 Prerequisites
+## 📦 Prerequisites
 
-Before running the project, ensure the following tools are installed:
-
-## Flutter Development
+### Flutter Development
 - Flutter SDK 3.0+
 - Dart SDK 2.17+
 
-## Android Development
+### Android Development
 - Android Studio
 - Android SDK API Level 21+
 
-## iOS Development
+### iOS Development
 - Xcode 13+ (macOS only)
 
-## IDE
-- VS Code
-or
+### IDE
+- VS Code  
 - Android Studio
 
 ---
 
-# 🚀 Future Enhancements
+## 🚀 Run Application
 
-- 🎤 Voice AI Doctor
-- 📸 AI Food Scanner
-- 🧠 Mood Detection AI
-- 📍 Nearby Healthcare Services
-- ⌚ Wearable Device Integration
-- 📡 Real-time Health Monitoring
+After completing Firebase setup and installing all dependencies, run the application using:
+
+```bash
+flutter run
+```
+
+### 📱 Run on Android Device
+
+Make sure:
+- USB Debugging is enabled
+- Android device is connected properly
+
+Check connected devices:
+
+```bash
+flutter devices
+```
+
+Run app:
+
+```bash
+flutter run
+```
 
 ---
 
-# 📱 Supported Platforms
+### 🤖 Run on Android Emulator
+
+Start emulator using Android Studio or VS Code:
+
+```bash
+flutter run
+```
+
+---
+
+### 🍎 Run on iOS Simulator
+
+```bash
+flutter run
+```
+
+---
+
+### 🛠️ Common Commands
+
+Clean project:
+
+```bash
+flutter clean
+```
+
+Install dependencies:
+
+```bash
+flutter pub get
+```
+
+Check Flutter setup:
+
+```bash
+flutter doctor
+```
+
+---
+
+## 🚀 Future Enhancements
+
+- 🎤 Voice AI Doctor  
+- 📸 AI Food Scanner  
+- 🧠 Mood Detection AI  
+- 📍 Nearby Healthcare Services  
+- ⌚ Wearable Device Integration  
+- 📡 Real-time Health Monitoring  
+
+---
+
+## 📱 Supported Platforms
 
 - Android
 - iOS
 
 ---
 
-# 👨‍💻 Development Status
+## 👨‍💻 Development Status
 
 🚧 Currently under active development.
 
 ---
 
-# 📄 License
+## 📄 License
 
 This project is developed for educational and research purposes.
 
 ---
 
-# ❤️ HealthMate AI
+<div align="center">
 
-Empowering smarter healthcare with artificial intelligence.
+### ❤️ Empowering smarter healthcare with artificial intelligence.
+
+</div>
